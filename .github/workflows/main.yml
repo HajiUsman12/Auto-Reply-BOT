@@ -1,47 +1,27 @@
-name: Node.js CI
+name: WhatsApp Bot 6hr Runtime
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch:
   schedule:
-    - cron: '0 */6 * * *'
+    - cron: '*/5 * * * *'  # Run every 5 minutes
 
 jobs:
-  build:
+  run-bot:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [20.x]
-
+    timeout-minutes: 360  # Max timeout (6 hours)
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Set up Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: '18'
 
       - name: Install dependencies
         run: npm install
 
-      - name: Install FFmpeg
-        run: sudo apt-get update && sudo apt-get install -y ffmpeg
-
-      - name: Start application with timeout
+      - name: Run WhatsApp AutoReply Bot
         run: |
-          timeout 21590s npm start
-
-      - name: Save state (Optional)
-        run: |
-          if [ -f ./save_state.sh ]; then
-            chmod +x ./save_state.sh
-            ./save_state.sh
-          else
-            echo "save_state.sh not found, skipping"
-          fi
+          echo "🔁 Bot started at $(date)"
+          node index.js &
+          sleep 350 # run ~5.8 mins
