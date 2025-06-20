@@ -1,22 +1,17 @@
 const { default: makeWASocket, useSingleFileAuthState } = require("@whiskeysockets/baileys");
 const fs = require("fs");
 
-// Session auth file path
-const { state, saveState } = useSingleFileAuthState("./session.json"); // <-- SESSION FILE
-
-// Load keywords
+const { state, saveState } = useSingleFileAuthState("./session.json");
 const keywords = JSON.parse(fs.readFileSync("./keywords.json", "utf8"));
 
 async function connectBot() {
   const sock = makeWASocket({
     auth: state,
-    printQRInTerminal: true, // QR sirf first time
+    printQRInTerminal: true
   });
 
-  // Save session when it updates
   sock.ev.on("creds.update", saveState);
 
-  // Message event
   sock.ev.on("messages.upsert", async ({ messages, type }) => {
     if (type !== "notify") return;
     const msg = messages[0];
@@ -24,11 +19,11 @@ async function connectBot() {
 
     const from = msg.key.remoteJid;
     const body = msg.message.conversation || msg.message.extendedTextMessage?.text || "";
+    const lower = body.trim().toLowerCase();
 
-    const lowerBody = body.toLowerCase();
-    if (keywords[lowerBody]) {
-      await sock.sendMessage(from, { text: keywords[lowerBody] });
-      console.log(`[AutoReply]: "${body}" => "${keywords[lowerBody]}"`);
+    if (keywords[lower]) {
+      await sock.sendMessage(from, { text: keywords[lower] });
+      console.log(`[AutoReply]: "${body}" → "${keywords[lower]}"`);
     }
   });
 }
